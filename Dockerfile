@@ -6,7 +6,7 @@ FROM arm32v7/debian:buster
 
 LABEL maintainer="Nick Gregory <docker@openenterprise.co.uk>"
 
-ARG TIMESCALEDB_VERSION="1.7.0"
+ARG TIMESCALEDB_VERSION="1.7.4"
 
 # basic build infra
 RUN apt-get -y update \
@@ -16,7 +16,11 @@ RUN apt-get -y update \
     && gem install --no-document fpm
 
 # package deps
-RUN apt-get -y install postgresql-server-dev-11 libssl-dev
+RUN curl http://apt-openenterprise.s3-website.eu-west-2.amazonaws.com/openenterprise.pub | sudo apt-key add - \
+    && echo "deb http://apt-openenterprise.s3-website.eu-west-2.amazonaws.com/debian openenterprise-buster main" > /etc/apt/sources.list.d/openenterprise-binary.list \
+    && echo "deb http://deb.debian.org/debian buster-backports main" > /etc/apt/sources.list.d/buster-backports.list \
+    && apt-get -y update \
+    && apt-get -y install postgresql-server-dev-12 libssl-dev
 
 # package build
 RUN mkdir /src && cd /src \
@@ -29,7 +33,7 @@ RUN mkdir /src && cd /src \
 # package install
 RUN cd /src/timescaledb/build \
     && make DESTDIR=/install install \
-    && fpm -s dir -t deb -C /install --name timescaledb-postgresql-11 --version ${TIMESCALEDB_VERSION} --iteration 1 --depends "libssl1.1 (>= 1.1.0)" --depends "postgresql-11 (>= 11.4)" \
+    && fpm -s dir -t deb -C /install --name timescaledb-postgresql-12 --version ${TIMESCALEDB_VERSION} --iteration 1 --depends "libssl1.1 (>= 1.1.0)" --depends "postgresql-12 (>= 12.4)" \
        --description "An open-source time-series database based on PostgreSQL, as an extension. \
  An open-source time-series database optimized for fast ingest and complex queries. \
  Engineered up from PostgreSQL, packaged as an extension."
